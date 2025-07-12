@@ -80,9 +80,7 @@ bool wmi_manager::fire_item(
 {
 	// Does this item exist?
 	item_ptr wmi = get_item(id);
-	if(!wmi) {
-		return false;
-	} else if(is_key_hold_repeat && !wmi->hotkey_repeat()) {
+	if(!wmi || (is_key_hold_repeat && !wmi->hotkey_repeat())) {
 		return false;
 	}
 
@@ -97,8 +95,17 @@ bool wmi_manager::fire_item(
 	if(wmi->can_show(hex, gamedata, fc)) {
 		wmi->fire_event(hex, gamedata);
 	}
+
+	// Restore old values
 	gamedata.get_variable("x1") = x1;
 	gamedata.get_variable("y1") = y1;
+
+	// Update toggle variable, if applicable
+	if(wmi->is_toggle_item()) {
+		auto& state = gamedata.get_variable(wmi->toggle_state_variable());
+		state = !state.to_bool();
+	}
+
 	return true;
 }
 
@@ -141,6 +148,13 @@ void wmi_manager::get_items(const map_location& hex,
 		// Allows variables to be substituted at invocation time
 		auto description = utils::interpolate_variables_into_string(item->menu_text(), gamedata);
 		items.emplace_back("id", item->hotkey_id(), "label", description, "icon", item->image());
+
+		if(!item->is_toggle_item()) {
+			continue;
+		}
+
+		// Write checkbox key separately. Even an empty value manifests a toggle button.
+		items.back()["checkbox"] = gamedata.get_variable(item->toggle_state_variable()).to_bool();
 	}
 
 	// Restore old values
