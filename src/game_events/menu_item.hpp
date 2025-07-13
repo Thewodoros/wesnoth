@@ -174,7 +174,7 @@ private:
 	/** Controls the lifetime of the associate hotkey's hotkey_command. */
 	utils::optional<hotkey::wml_hotkey_record> hotkey_record_;
 
-	/** The variable which holds the menu item's toggle state. */
+	/** The name of WML variable which holds the menu item's toggle state. */
 	utils::optional<std::string> toggle_state_variable_;
 
 	/** The image to display in the menu next to this item's description. */
