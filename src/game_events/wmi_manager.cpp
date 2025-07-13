@@ -35,6 +35,26 @@ static lg::log_domain log_engine("engine");
 
 namespace game_events
 {
+namespace
+{
+/**
+ * If the given menu item is a toggle item, attempts to execute the given function on
+ * the item's toggle state variable. Invalid variable names are ignored.
+ */
+template<typename Func>
+void if_toggle_item(const wmi_manager::item_ptr& item, game_data& gamedata, Func func)
+{
+	if(item->is_toggle_item()) {
+		try {
+			func(gamedata.get_variable(item->toggle_state_variable()));
+		} catch(const invalid_variablename_exception&) {
+			// TODO: log a warning?
+		}
+	}
+}
+
+} // namespace
+
 wmi_manager::wmi_manager()
 	: wml_menu_items_()
 {
@@ -92,13 +112,7 @@ bool wmi_manager::fire_item(
 	scoped_xy_unit highlighted_unit("unit", hex, units);
 
 	// Update toggle variable, if applicable, before running the event
-	if(wmi->is_toggle_item()) {
-		try {
-			auto& state = gamedata.get_variable(wmi->toggle_state_variable());
-			state = !state.to_bool();
-		} catch(const invalid_variablename_exception&) {
-		}
-	}
+	if_toggle_item(wmi, gamedata, [](auto& state) { state = !state.to_bool(); });
 
 	// Can this item be shown?
 	if(wmi->can_show(hex, gamedata, fc)) {
@@ -152,12 +166,7 @@ void wmi_manager::get_items(const map_location& hex,
 		items.emplace_back("id", item->hotkey_id(), "label", description, "icon", item->image());
 
 		// Write checkbox key separately; even an empty value manifests a toggle button.
-		if(item->is_toggle_item()) {
-			try {
-				items.back()["checkbox"] = gamedata.get_variable(item->toggle_state_variable()).to_bool();
-			} catch(const invalid_variablename_exception&) {
-			}
-		}
+		if_toggle_item(item, gamedata, [&](auto& state) { items.back()["checkbox"] = state.to_bool(); });
 	}
 
 	// Restore old values
