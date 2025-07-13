@@ -35,20 +35,6 @@ static lg::log_domain log_engine("engine");
 
 namespace game_events
 {
-namespace
-{
-std::string get_item_toggle_state_variable(const wmi_manager::item_ptr& item)
-
-try {
-
-} catch(const invalid_variablename_exception&) {
-
-}
-
-
-
-} // namespace
-
 wmi_manager::wmi_manager()
 	: wml_menu_items_()
 {
