@@ -148,7 +148,7 @@ public:
 
 	std::string toggle_state_variable() const
 	{
-		return toggle_state_variable_.value_or("");
+		return toggle_state_variable_.value();
 	}
 
 private:

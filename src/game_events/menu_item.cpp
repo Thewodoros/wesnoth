@@ -64,6 +64,12 @@ inline std::string make_item_hotkey(const std::string& id)
 	return play_controller::hotkey_handler::wml_menu_hotkey_prefix + id;
 }
 
+/** Returns the default toggle state variable for given menu item id. */
+inline std::string make_item_state_variable(const std::string& id)
+{
+	return id + ".toggle_state";
+}
+
 } // anonymous namespace
 
 // Constructor for reading from a saved config.
@@ -89,6 +95,7 @@ wml_menu_item::wml_menu_item(const std::string& id, const config& cfg)
 		deprecated_message("needs_select", DEP_LEVEL::INDEFINITE, {1, 15, 0});
 	}
 
+	// We know the key is present if the tag is.
 	if(auto toggle = cfg.optional_child("toggle")) {
 		toggle_state_variable_ = (*toggle)["state_variable"].str();
 	}
@@ -149,7 +156,6 @@ const std::string& wml_menu_item::image() const
 	// Default the image?
 	return image_.empty() ? game_config::images::wml_menu : image_;
 }
-
 
 bool wml_menu_item::can_show(const map_location& hex, const game_data& data, filter_context& filter_con) const
 {
@@ -333,7 +339,7 @@ void wml_menu_item::update(const vconfig& vcfg)
 	}
 
 	if(const vconfig& toggle = vcfg.child("toggle")) {
-		toggle_state_variable_ = toggle["state_variable"].str();
+		toggle_state_variable_ = toggle["state_variable"].str(make_item_state_variable(item_id_));
 	}
 
 	// Update the registered hotkey?
